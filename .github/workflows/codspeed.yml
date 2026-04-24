@@ -63,3 +63,53 @@ jobs:
         with:
           action-version: ${{ matrix.action-version }}
           mode: ${{ matrix.mode }}
+
+  # Dev runs for local e2e work. The branch prefix selects which dev's tunnel
+  # secret to use: `<slug>-dev/...` picks `CODSPEED_<SLUG>_DEV_UPLOAD_URL`.
+  # Same-repo PRs only — fork PRs don't get secrets anyway, and the explicit
+  # check makes the invariant visible.
+  benchmarks-dev:
+    name: "Benchmarks (Dev) - action ${{ matrix.action-version }}"
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && contains(github.head_ref, '-dev/') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - action-version: "v2"
+            os: ubuntu-22.04
+            mode: instrumentation
+          - action-version: "v3"
+            os: ubuntu-latest
+            mode: instrumentation
+          - action-version: "v4"
+            os: ubuntu-latest
+            mode: simulation
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve dev upload URL
+        id: resolve
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+        run: |
+          set -euo pipefail
+          prefix="${HEAD_REF%%/*}"        # e.g. guillaume-dev
+          slug="${prefix%-dev}"            # e.g. guillaume
+          if ! [[ "$slug" =~ ^[a-z0-9]+$ ]]; then
+            echo "::error::invalid dev slug '$slug' (must match ^[a-z0-9]+$)"
+            exit 1
+          fi
+          key="CODSPEED_$(echo "$slug" | tr '[:lower:]' '[:upper:]')_DEV_UPLOAD_URL"
+          url=$(jq -r --arg k "$key" '.[$k] // empty' <<< "$ALL_SECRETS")
+          if [[ -z "$url" ]]; then
+            echo "::error::no secret $key configured on this repo"
+            exit 1
+          fi
+          echo "::add-mask::$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          action-version: ${{ matrix.action-version }}
+          mode: ${{ matrix.mode }}
+          upload-url: ${{ steps.resolve.outputs.url }}
