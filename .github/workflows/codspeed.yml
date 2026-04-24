@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "main"
+      - "guiom"
   pull_request:
 
 jobs:
   benchmarks-staging:
     name: "Benchmarks (Staging) - action ${{ matrix.action-version }}"
-    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'staging/') }}
+    # if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'staging/') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -38,7 +38,7 @@ jobs:
         with:
           action-version: ${{ matrix.action-version }}
           mode: ${{ matrix.mode }}
-          upload-url: ${{ secrets.CODSPEED_STAGING_UPLOAD_URL }}
+          upload-url: ${{ secrets.DEV_GUILLAUME_CODSPEED_UPLOAD_URL }}
 
   benchmarks-prod:
     name: "Benchmarks (Prod) - action ${{ matrix.action-version }}"
