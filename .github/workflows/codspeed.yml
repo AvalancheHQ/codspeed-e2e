@@ -1,0 +1,65 @@
+name: benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  benchmarks-staging:
+    name: "Benchmarks (Staging) - action ${{ matrix.action-version }}"
+    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'staging/') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every currently-supported major version of CodSpeedHQ/action.
+        # Tokenless validation relies on the action's underlying runner emitting
+        # a `CodSpeed Run Hash: "<hash>"` log line; keep these in sync with the
+        # majors advertised on https://github.com/CodSpeedHQ/action/releases.
+        #
+        # - v2 pre-dates glibc 2.35 and needs ubuntu-22.04
+        # - v2/v3 only support `instrumentation`; `simulation` was introduced in v4
+        include:
+          - action-version: "v2"
+            os: ubuntu-22.04
+            mode: instrumentation
+          - action-version: "v3"
+            os: ubuntu-latest
+            mode: instrumentation
+          - action-version: "v4"
+            os: ubuntu-latest
+            mode: simulation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          action-version: ${{ matrix.action-version }}
+          mode: ${{ matrix.mode }}
+          upload-url: ${{ secrets.CODSPEED_STAGING_UPLOAD_URL }}
+
+  benchmarks-prod:
+    name: "Benchmarks (Prod) - action ${{ matrix.action-version }}"
+    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'prod/') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - action-version: "v2"
+            os: ubuntu-22.04
+            mode: instrumentation
+          - action-version: "v3"
+            os: ubuntu-latest
+            mode: instrumentation
+          - action-version: "v4"
+            os: ubuntu-latest
+            mode: simulation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/run-benchmarks
+        with:
+          action-version: ${{ matrix.action-version }}
+          mode: ${{ matrix.mode }}

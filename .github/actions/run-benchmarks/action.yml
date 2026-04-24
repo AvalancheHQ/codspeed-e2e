@@ -1,0 +1,93 @@
+name: Run benchmarks
+description: Set up Python and run the CodSpeed action for a given major version.
+
+inputs:
+  action-version:
+    description: Major version of CodSpeedHQ/action to run (v2, v3, or v4).
+    required: true
+  mode:
+    description: CodSpeed mode (instrumentation or simulation).
+    required: true
+  upload-url:
+    description: Override upload URL. Leave empty to use the action default (prod).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    # The CodSpeed runner derives its run URI from the working directory
+    # path, so each matrix entry would otherwise collide on the same URI.
+    # Move sources under `runner-<action-version>/` to disambiguate.
+    - name: Namespace source directory by action version
+      shell: bash
+      run: |
+        mkdir -p runner-${{ inputs.action-version }}
+        mv python runner-${{ inputs.action-version }}/python
+
+    - name: Install Python dependencies
+      working-directory: runner-${{ inputs.action-version }}/python
+      shell: bash
+      run: uv sync
+
+    # GitHub Actions does not allow expressions in `uses:`, so we need a
+    # separate step per major version guarded by `if:`. We also split on
+    # whether `upload-url` is set, because passing an empty string is not
+    # the same as omitting the input for `CodSpeedHQ/action`.
+    - name: Run the action (v2, prod)
+      if: inputs.action-version == 'v2' && inputs.upload-url == ''
+      uses: CodSpeedHQ/action@v2
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+
+    - name: Run the action (v2, custom upload-url)
+      if: inputs.action-version == 'v2' && inputs.upload-url != ''
+      uses: CodSpeedHQ/action@v2
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+        upload-url: ${{ inputs.upload-url }}
+
+    - name: Run the action (v3, prod)
+      if: inputs.action-version == 'v3' && inputs.upload-url == ''
+      uses: CodSpeedHQ/action@v3
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+
+    - name: Run the action (v3, custom upload-url)
+      if: inputs.action-version == 'v3' && inputs.upload-url != ''
+      uses: CodSpeedHQ/action@v3
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+        upload-url: ${{ inputs.upload-url }}
+
+    - name: Run the action (v4, prod)
+      if: inputs.action-version == 'v4' && inputs.upload-url == ''
+      uses: CodSpeedHQ/action@v4
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+
+    - name: Run the action (v4, custom upload-url)
+      if: inputs.action-version == 'v4' && inputs.upload-url != ''
+      uses: CodSpeedHQ/action@v4
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+        upload-url: ${{ inputs.upload-url }}
