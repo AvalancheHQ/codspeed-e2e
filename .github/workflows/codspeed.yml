@@ -20,6 +20,7 @@ jobs:
         # a `CodSpeed Run Hash: "<hash>"` log line; keep these in sync with the
         # majors advertised on https://github.com/CodSpeedHQ/action/releases.
         #
+        #
         # - v2 pre-dates glibc 2.35 and needs ubuntu-22.04
         # - v2/v3 only support `instrumentation`; `simulation` was introduced in v4
         include:
