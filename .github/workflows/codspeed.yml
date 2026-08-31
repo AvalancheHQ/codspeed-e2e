@@ -60,6 +60,9 @@ jobs:
           - action-version: "v4"
             os: ubuntu-latest
             mode: simulation
+          - action-version: "v5"
+            os: ubuntu-latest
+            mode: simulation
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/run-benchmarks
@@ -86,6 +89,9 @@ jobs:
             os: ubuntu-latest
             mode: instrumentation
           - action-version: "v4"
+            os: ubuntu-latest
+            mode: simulation
+          - action-version: "v5"
             os: ubuntu-latest
             mode: simulation
     steps:
