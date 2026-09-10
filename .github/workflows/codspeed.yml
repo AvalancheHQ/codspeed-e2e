@@ -2,6 +2,11 @@ name: benchmarks
 
 on:
   workflow_dispatch:
+    inputs:
+      dev_slug:
+        description: "Run the dev job against CODSPEED_<SLUG>_DEV_UPLOAD_URL (e.g. 'john'). Leave empty to skip the dev job."
+        required: false
+        default: ""
   push:
     branches:
       - "main"
@@ -10,7 +15,7 @@ on:
 jobs:
   benchmarks-staging:
     name: "Benchmarks (Staging) - action ${{ matrix.action-version }}"
-    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'staging/') }}
+    if: ${{ (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'staging/')) && !(github.event_name == 'workflow_dispatch' && inputs.dev_slug != '') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -45,7 +50,7 @@ jobs:
 
   benchmarks-prod:
     name: "Benchmarks (Prod) - action ${{ matrix.action-version }}"
-    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'prod/') }}
+    if: ${{ (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref || github.ref, 'prod/')) && !(github.event_name == 'workflow_dispatch' && inputs.dev_slug != '') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -70,13 +75,14 @@ jobs:
           action-version: ${{ matrix.action-version }}
           mode: ${{ matrix.mode }}
 
-  # Dev runs for local e2e work. The branch prefix selects which dev's tunnel
-  # secret to use: `<slug>-dev/...` picks `CODSPEED_<SLUG>_DEV_UPLOAD_URL`.
-  # Same-repo PRs only — fork PRs don't get secrets anyway, and the explicit
-  # check makes the invariant visible.
+  # Dev runs for local e2e work. Two entry points select which dev's tunnel
+  # secret (`CODSPEED_<SLUG>_DEV_UPLOAD_URL`) to use:
+  #   - Same-repo PR from a `<slug>-dev/...` branch (fork PRs don't get secrets
+  #     anyway, and the explicit check makes the invariant visible).
+  #   - `workflow_dispatch` (runs on main) with the `dev_slug` input set.
   benchmarks-dev:
     name: "Benchmarks (Dev) - action ${{ matrix.action-version }}"
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && contains(github.head_ref, '-dev/') }}
+    if: ${{ (github.event.pull_request.head.repo.full_name == github.repository && contains(github.head_ref, '-dev/')) || (github.event_name == 'workflow_dispatch' && inputs.dev_slug != '') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -100,11 +106,16 @@ jobs:
         id: resolve
         env:
           HEAD_REF: ${{ github.head_ref }}
+          DEV_SLUG: ${{ inputs.dev_slug }}
           ALL_SECRETS: ${{ toJSON(secrets) }}
         run: |
           set -euo pipefail
-          prefix="${HEAD_REF%%/*}"        # e.g. guillaume-dev
-          slug="${prefix%-dev}"            # e.g. guillaume
+          if [[ -n "${DEV_SLUG:-}" ]]; then
+            slug="$(echo "$DEV_SLUG" | tr '[:upper:]' '[:lower:]')"  # workflow_dispatch input
+          else
+            prefix="${HEAD_REF%%/*}"      # e.g. guillaume-dev
+            slug="${prefix%-dev}"          # e.g. guillaume
+          fi
           if ! [[ "$slug" =~ ^[a-z0-9]+$ ]]; then
             echo "::error::invalid dev slug '$slug' (must match ^[a-z0-9]+$)"
             exit 1

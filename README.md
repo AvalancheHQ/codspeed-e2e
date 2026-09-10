@@ -16,5 +16,12 @@ single PR exercises all runner versions at once.
 
 - Ensure there is a secret in this repo with the upload URL to your dev environment,
   with your name in the secret name. E.g.: `CODSPEED_JOHN_DEV_UPLOAD_URL`.
-- Create a branch prefixed with your name. E.g.: john-dev/my-branch.
-- Then open a PR.
+
+Then trigger the dev job either way:
+
+- **From a PR:** create a branch prefixed with your name (e.g. `john-dev/my-branch`)
+  and open a PR. The `<slug>-dev/` prefix selects your secret.
+- **From `main`:** run the workflow manually (Actions → benchmarks → Run workflow,
+  or `gh workflow run codspeed.yml -f dev_slug=john`) with the `dev_slug` input set
+  to your slug. A dev dispatch runs only the dev job; leaving `dev_slug` empty runs
+  the staging and prod jobs instead.
