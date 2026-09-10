@@ -3,7 +3,7 @@ description: Set up Python and run the CodSpeed action for a given major version
 
 inputs:
   action-version:
-    description: Major version of CodSpeedHQ/action to run (v2, v3, or v4).
+    description: Major version of CodSpeedHQ/action to run (v2, v3, v4, or v5).
     required: true
   mode:
     description: CodSpeed mode (instrumentation or simulation).
@@ -86,6 +86,23 @@ runs:
     - name: Run the action (v4, custom upload-url)
       if: inputs.action-version == 'v4' && inputs.upload-url != ''
       uses: CodSpeedHQ/action@v4
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+        upload-url: ${{ inputs.upload-url }}
+
+    - name: Run the action (v5, prod)
+      if: inputs.action-version == 'v5' && inputs.upload-url == ''
+      uses: CodSpeedHQ/action@v5
+      with:
+        mode: ${{ inputs.mode }}
+        working-directory: runner-${{ inputs.action-version }}/python
+        run: uv run pytest test_benchmark.py --codspeed
+
+    - name: Run the action (v5, custom upload-url)
+      if: inputs.action-version == 'v5' && inputs.upload-url != ''
+      uses: CodSpeedHQ/action@v5
       with:
         mode: ${{ inputs.mode }}
         working-directory: runner-${{ inputs.action-version }}/python
