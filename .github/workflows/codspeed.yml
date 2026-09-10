@@ -47,6 +47,8 @@ jobs:
           action-version: ${{ matrix.action-version }}
           mode: ${{ matrix.mode }}
           upload-url: ${{ secrets.CODSPEED_STAGING_UPLOAD_URL }}
+      - name: Maybe wait for a while
+        run: sleep ${{ strategy.job-index }}00
 
   benchmarks-prod:
     name: "Benchmarks (Prod) - action ${{ matrix.action-version }}"
