@@ -11,3 +11,10 @@ without a token and the platform validates the run by reading the workflow logs.
 The workflow runs across every supported major version of
 [`CodSpeedHQ/action`](https://github.com/CodSpeedHQ/action) in a matrix so a
 single PR exercises all runner versions at once.
+
+## Dev tests
+
+- Ensure there is a secret in this repo with the upload URL to your dev environment,
+  with your name in the secret name. E.g.: `CODSPEED_JOHN_DEV_UPLOAD_URL`.
+- Create a branch prefixed with your name. E.g.: john-dev/my-branch.
+- Then open a PR.
