@@ -129,11 +129,11 @@ jobs:
           echo "::add-mask::$url"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
-      - name: Maybe wait for a while
-        run: sleep ${{ strategy.job-index }}00
-
       - uses: ./.github/actions/run-benchmarks
         with:
           action-version: ${{ matrix.action-version }}
           mode: ${{ matrix.mode }}
           upload-url: ${{ steps.resolve.outputs.url }}
+
+      - name: Maybe wait for a while
+        run: sleep ${{ strategy.job-index }}00
