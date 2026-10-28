@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Fractal tree benchmark with pytest-codspeed"
 requires-python = ">=3.8"
 dependencies = [
-    "pytest>=7.0.0",
+    "pytest>=7.0.0,<9.2",  # https://github.com/CodSpeedHQ/pytest-codspeed/issues/146
     "pytest-codspeed>=2.0.0",
 ]
 
