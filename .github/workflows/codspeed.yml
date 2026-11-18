@@ -26,16 +26,17 @@ jobs:
         # majors advertised on https://github.com/CodSpeedHQ/action/releases.
         #
         # - v2 pre-dates glibc 2.35 and needs ubuntu-22.04
+        # - v3/v4 runners (below v5) don't support Ubuntu 26.04 and need ubuntu-24.04
         # - v2/v3 only support `instrumentation`; `simulation` was introduced in v4
         include:
           - action-version: "v2"
             os: ubuntu-22.04
             mode: instrumentation
           - action-version: "v3"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             mode: instrumentation
           - action-version: "v4"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             mode: simulation
           - action-version: "v5"
             os: ubuntu-latest
@@ -60,10 +61,10 @@ jobs:
             os: ubuntu-22.04
             mode: instrumentation
           - action-version: "v3"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             mode: instrumentation
           - action-version: "v4"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             mode: simulation
           - action-version: "v5"
             os: ubuntu-latest
@@ -92,10 +93,10 @@ jobs:
             os: ubuntu-22.04
             mode: instrumentation
           - action-version: "v3"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             mode: instrumentation
           - action-version: "v4"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             mode: simulation
           - action-version: "v5"
             os: ubuntu-latest
